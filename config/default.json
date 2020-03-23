@@ -1,0 +1,8 @@
+{
+    "jwtSecret": "mysecrettoken",
+    "user": "postgres",
+    "host": "localhost",
+    "database": "imihigo_db",
+    "password": "janvier",
+    "port": 5432
+}
