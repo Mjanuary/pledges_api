@@ -1,15 +1,17 @@
 const config = require('config');
 const Sequelize = require('sequelize');
 
-const sequelize = new Sequelize(config.get('database'), config.get('user'), config.get('password'));
+const sequelize = new Sequelize(config.get('database'), config.get('user'), config.get('password'), {
+    dialect: 'postgres'
+});
 
 const models = {
     user: sequelize.import('./users'),
 };
 
-Object.keys(db).forEach(modelName => {
-    if (db[modelName].associate) {
-        db[modelName].associate(db);
+Object.keys(models).forEach(modelName => {
+    if (models[modelName].associate) {
+        models[modelName].associate(models);
     }
 });
 
