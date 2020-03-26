@@ -2,6 +2,7 @@
   "name": "api",
   "version": "1.0.0",
   "description": "pledges api",
+  "private": true,
   "main": "index.js",
   "scripts": {
     "dev": "nodemon server",
