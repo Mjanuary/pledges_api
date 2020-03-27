@@ -4,5 +4,6 @@
     "host": "localhost",
     "database": "imihigo_db",
     "password": "test@123",
-    "port": 5432
+    "port": 5432,
+    "mailpassword": "igiraneza"
 }
