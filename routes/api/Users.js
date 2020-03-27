@@ -70,7 +70,7 @@ router.post(
             if (user) {
                 return res.status(400).json({
                     errors: [{
-                        message: 'User already exists',
+                        msg: 'User already exists',
                         result: user
                     }]
                 });
@@ -103,7 +103,7 @@ router.post(
                         });
                     } else {
                         return res.status(200).json({
-                            message: 'user Created',
+                            msg: 'user Created',
                             result: results,
                             mailResponse: info.response
                         });
@@ -113,8 +113,8 @@ router.post(
         } catch (error) {
             return res.status(500).json({
                 errors: [{
-                    message: 'server error',
-                    errorMessage: error.message,
+                    msg: 'server error',
+                    errormsg: error.message,
                     error: error
                 }]
             });
@@ -132,22 +132,22 @@ router.get('/:id', [auth, [
         const user = await User.getUserById(req.params.id);
         if (user) {
             return res.status(200).json({
-                message: 'Get User by Id',
+                msg: 'Get User by Id',
                 result: user,
                 resultCount: user.length
             })
         } else {
             return res.status(400).json({
                 errors: [{
-                    message: 'User Not found',
+                    msg: 'User Not found',
                 }]
             });
         }
     } catch (error) {
         return res.status(500).json({
             errors: [{
-                message: 'server error',
-                errorMessage: error.message,
+                msg: 'server error',
+                errormsg: error.message,
                 error: error
             }]
         });
@@ -162,7 +162,7 @@ router.get('/', auth, async (req, res, next) => {
         const users = await User.getAllUsers();
         if (users) {
             return res.status(200).json({
-                message: 'Get All Users',
+                msg: 'Get All Users',
                 result: users,
                 resultCount: users.length
             });
@@ -170,8 +170,8 @@ router.get('/', auth, async (req, res, next) => {
     } catch (error) {
         return res.status(500).json({
             errors: [{
-                message: 'server error',
-                errorMessage: error.message,
+                msg: 'server error',
+                errormsg: error.message,
                 error: error
             }]
         });
@@ -208,7 +208,7 @@ router.put('/:id', auth, upload.single('profile'), [
         if (!user) {
             return res.status(400).json({
                 errors: [{
-                    message: 'User Not exists',
+                    msg: 'Invalid User Id',
                     result: user
                 }]
             });
@@ -225,7 +225,7 @@ router.put('/:id', auth, upload.single('profile'), [
         const update = await User.updateUserById(req.params.id, user);
         if (update) {
             return res.status(400).json({
-                message: 'User Updated Successfuly',
+                msg: 'User Profile Updated Successfuly',
                 result: update,
                 resultCount: update.length
             })
@@ -233,8 +233,77 @@ router.put('/:id', auth, upload.single('profile'), [
     } catch (error) {
         return res.status(500).json({
             errors: [{
-                message: 'server error',
-                errorMessage: error.message,
+                msg: 'server error',
+                errormsg: error.message,
+                error: error
+            }]
+        });
+    }
+})
+
+// @route   Put user/:id/password/
+// @desc    Upadate User password
+// @access  Private
+router.put('/:id/password', auth, [
+    check('password', 'Password is required').not().isEmpty(),
+    check('comfirm_password', 'Comfirm Password is required').not().isEmpty(),
+    check('current_password', 'Current Password is Required').not().isEmpty()
+], async (req, res) => {
+    //checking errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            errors: errors.array()
+        });
+    }
+    const {
+        password,
+        comfirm_password,
+        current_password
+    } = req.body;
+    //checking if password matchs
+    if (password !== comfirm_password) {
+        return res.status(400).json({
+            errors: [{
+                msg: 'Password do not Match!'
+            }]
+        });
+    }
+    try {
+        const user = await User.getUserById(req.params.id);
+        if (!user) {
+            return res.status(400).json({
+                errors: [{
+                    msg: 'Invalid User Id',
+                }]
+            });
+        };
+
+        const isMatch = await bcrypt.compare(current_password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({
+                errors: [{
+                    msg: 'Password 2 do not Match!',
+                }]
+            });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const newPassword = await bcrypt.hash(password, salt);
+
+        const updatePass = await User.updateUserPassword(req.params.id, newPassword);
+        if (updatePass) {
+            return res.status(200).json({
+                msg: 'User Password Updated Successfuly',
+                result: updatePass,
+                resultCount: updatePass.length
+            })
+        }
+    } catch (error) {
+        return res.status(500).json({
+            errors: [{
+                msg: 'server error',
+                errormsg: error.message,
                 error: error
             }]
         });

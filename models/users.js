@@ -80,5 +80,20 @@ module.exports = {
                 }
             })
         })
+    },
+    updateUserPassword(id, password) {
+        const query = {
+            text: 'UPDATE users SET password=$1 WHERE user_id=$2',
+            values: [password, id]
+        }
+        return new Promise((resolve, reject) => {
+            pool.query(query, (err, res) => {
+                if (err) {
+                    reject(err.stack)
+                } else {
+                    resolve(res.rows)
+                }
+            })
+        })
     }
 }
