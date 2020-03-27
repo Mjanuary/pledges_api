@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const config = require('config');
 const uuid = require('uuid');
-
+const multer = require('multer');
 const {
     check,
     validationResult
@@ -13,11 +13,22 @@ const {
 const auth = require('../../middleware/auth');
 const User = require('../../models/users');
 
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/plofile_img/')
+    },
+    filename: function (req, file, cb) {
+        cb(null, new Date().toISOString() + file.originalname)
+    }
+})
+const upload = multer({
+    storage: storage
+});
 const router = express.Router();
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: 'ij.gabin123@gmail.com',
+        user: 'imihigoms@gmail.com',
         pass: config.get('mailpassword')
     }
 });
@@ -78,10 +89,10 @@ router.post(
             const results = await User.createNewUser(user);
             if (results) {
                 const mailOptions = {
-                    from: 'ij.gabin123@gmail',
-                    to: 'janviermuhawenimana@gmail.com',
+                    from: 'imihigoms@gmail.com',
+                    to: 'ij.gabin123@gmail.com',
                     subject: 'Pledges MS Sign up Succesfully ',
-                    text: `You have succesfully sign up to Pledges MS your password is 123456 and usernma is ${email}`
+                    text: `You have succesfully sign up to Pledges MS your password is 123456 and username is ${email}`
                 };
                 transporter.sendMail(mailOptions, (error, info) => {
                     if (error) {
@@ -103,11 +114,131 @@ router.post(
             return res.status(500).json({
                 errors: [{
                     message: 'server error',
+                    errorMessage: error.message,
                     error: error
                 }]
             });
         }
     }
 );
+
+// @route   Get user/:id
+// @desc    Get one User by id
+// @access  Private
+router.get('/:id', [auth, [
+    check('id', 'Id is Reaquired').not().isEmpty()
+]], async (req, res) => {
+    try {
+        const user = await User.getUserById(req.params.id);
+        if (user) {
+            return res.status(200).json({
+                message: 'Get User by Id',
+                result: user,
+                resultCount: user.length
+            })
+        } else {
+            return res.status(400).json({
+                errors: [{
+                    message: 'User Not found',
+                }]
+            });
+        }
+    } catch (error) {
+        return res.status(500).json({
+            errors: [{
+                message: 'server error',
+                errorMessage: error.message,
+                error: error
+            }]
+        });
+    }
+});
+
+// @route   Get user/
+// @desc    Get All Users
+// @access  Private
+router.get('/', auth, async (req, res, next) => {
+    try {
+        const users = await User.getAllUsers();
+        if (users) {
+            return res.status(200).json({
+                message: 'Get All Users',
+                result: users,
+                resultCount: users.length
+            });
+        }
+    } catch (error) {
+        return res.status(500).json({
+            errors: [{
+                message: 'server error',
+                errorMessage: error.message,
+                error: error
+            }]
+        });
+    }
+})
+
+// @route   Put user/:id
+// @desc    Upadate User by id
+// @access  Private
+router.put('/:id', auth, upload.single('profile'), [
+    check('nid', 'Id Number is Required').not().isEmpty(),
+    check('email', 'E-mail is invalid').isEmail(),
+    check('phone_number', 'Phone Number is Required').not().isEmpty(),
+    check('username', 'Username Is Required')
+], async (req, res, next) => {
+    //checking errors
+    const errors = validationResult(req.body);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            errors: errors.array()
+        });
+    }
+    const {
+        nid,
+        email,
+        username,
+        names,
+        dob,
+        phone_number
+    } = req.body;
+    const profile = req.file.path;
+    try {
+        let user = await User.getUserById(req.params.id);
+        if (!user) {
+            return res.status(400).json({
+                errors: [{
+                    message: 'User Not exists',
+                    result: user
+                }]
+            });
+        }
+        user = {
+            nid,
+            email,
+            username,
+            names,
+            profile,
+            dob,
+            phone_number
+        }
+        const update = await User.updateUserById(req.params.id, user);
+        if (update) {
+            return res.status(400).json({
+                message: 'User Updated Successfuly',
+                result: update,
+                resultCount: update.length
+            })
+        }
+    } catch (error) {
+        return res.status(500).json({
+            errors: [{
+                message: 'server error',
+                errorMessage: error.message,
+                error: error
+            }]
+        });
+    }
+})
 
 module.exports = router;
