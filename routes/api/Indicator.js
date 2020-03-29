@@ -7,16 +7,17 @@ const {
 
 const auth = require('../../middleware/auth');
 const Academic = require('../../models/accademic_year');
+const Indicator = require('../../models/indicator');
 
 const router = express.Router();
 
-// @route   POST academic/
-// @desc    Insert a academic year
+// @route   POST indicator/
+// @desc    Insert new indicator
 // @access  Private
 router.post('/', [auth, [
-    check('accademic_title', 'Academic title is required').not().isEmpty(),
-    check('start_date', 'Start date is required').exists(),
-    check('end_date', 'End Date is required').exists()
+    check('accademic_id', 'Academic title is required').not().isEmpty(),
+    check('indicator_title', 'Start date is required').exists(),
+    check('indicator_description', 'End Date is required').exists()
 ]], async (req, res) => {
     const errors = validationResult(req);
     // check is there is errors & return them
@@ -26,22 +27,34 @@ router.post('/', [auth, [
         });
     }
     const {
-        accademic_title,
-        start_date,
-        end_date
+        accademic_id,
+        indicator_title,
+        indicator_description
     } = req.body
     try {
         const data = {
-            accademic_title,
-            start_date,
-            end_date,
-            registered_date: new Date().toISOString()
+            id: uuid.v4(),
+            accademic_id,
+            indicator_title,
+            indicator_description
         }
 
-        const results = await Academic.createNewAccademicYear(data);
+        //check if academic year id valid
+        const exists = await Academic.getAcademicYearById(accademic_id);
+        if (!exists) {
+            return res.status(400).json({
+                errors: [{
+                    msg: 'Invalid Academic Year Id',
+                    result: [],
+                    resultCount: 0
+                }]
+            });
+        }
+
+        const results = await Indicator.createNewIndicator(data);
         if (results) {
             return res.status(200).json({
-                msg: 'New Academic Year Created',
+                msg: 'New Indicator Created',
                 result: [data],
                 resultCount: 1
             });
@@ -58,22 +71,22 @@ router.post('/', [auth, [
     }
 });
 
-// @route   GET academic/:id
-// @desc    Get a Academic year by id
+// @route   GET indicator/:id
+// @desc    Get a indicator by id
 // @access  Private
 router.get('/:id', auth, async (req, res) => {
     try {
-        const results = await Academic.getAcademicYearById(req.params.id);
+        const results = await Indicator.getIndicatorById(req.params.id);
         if (results.length > 0) {
             return res.status(200).json({
-                msg: 'Get Academic year by Id',
+                msg: 'Get Indicator by Id',
                 result: results,
                 resultCount: results.length
             })
         } else {
             return res.status(400).json({
                 errors: [{
-                    msg: 'Invalid Academic year id',
+                    msg: 'Invalid Indicator id',
                 }]
             });
         }
@@ -88,13 +101,13 @@ router.get('/:id', auth, async (req, res) => {
     }
 })
 
-// @route   PUT academic/:id
-// @desc    Update a Academic year
+// @route   PUT indicator/:id
+// @desc    Update a indicator year
 // @access  Private
 router.put('/:id', [auth, [
-    check('accademic_title', 'Academic title is required').not().isEmpty(),
-    check('start_date', 'Start date is required').exists(),
-    check('end_date', 'End Date is required').exists(),
+    check('accademic_id', 'Academic title is required').not().isEmpty(),
+    check('indicator_title', 'Start date is required').exists(),
+    check('indicator_description', 'End Date is required').exists(),
 ]], async (req, res) => {
     const errors = validationResult(req);
     // check is there is errors & return them
@@ -104,33 +117,37 @@ router.put('/:id', [auth, [
         });
     }
     const {
-        accademic_title,
-        start_date,
-        end_date
+        accademic_id,
+        indicator_title,
+        indicator_description
     } = req.body
     try {
         const data = {
             id: req.params.id,
-            accademic_title,
-            start_date,
-            end_date,
-            updated_date: new Date().toISOString()
+            accademic_id,
+            indicator_title,
+            indicator_description
         }
-        //check if academic year id valid
-        const exists = await Academic.getAcademicYearById(req.params.id);
-        if (exists === 0) {
+        //check if academic year and indicator id are valid
+        const indicatorExists = await Indicator.getIndicatorById(req.params.id);
+
+        const academicExists = await Academic.getAcademicYearById(accademic_id);
+
+        if (indicatorExists.length === 0 || academicExists.length === 0) {
+            const existsText = academicExists.length === 0 ? 'Academic Year' : 'Indicator';
             return res.status(400).json({
                 errors: [{
-                    msg: 'Invalid Academic Year Id',
-                    result: exists,
-                    resultCount: exists.length
+                    msg: `Invalid ${existsText} Id`,
+                    result: [],
+                    resultCount: 0
                 }]
             });
         }
-        const results = await Academic.updateAccademicYearById(data);
+
+        const results = await Indicator.updateIndicatorById(data);
         if (results) {
             return res.status(200).json({
-                msg: 'New Academic Year Updated',
+                msg: 'New indicator Updated',
                 result: [data],
                 resultCount: 1
             });
@@ -146,8 +163,8 @@ router.put('/:id', [auth, [
     }
 })
 
-// @route   DELETE academic/:id
-// @desc    Delete a Academic year
+// @route   DELETE indicator/:id
+// @desc    Delete a Indicator
 // @access  Private
 router.delete('/:id', auth, async (req, res) => {
     try {
@@ -156,21 +173,21 @@ router.delete('/:id', auth, async (req, res) => {
             status: false
         }
 
-        //check if academic year id valid
-        const exists = await Academic.getAcademicYearById(req.params.id);
-        if (exists === 0) {
+        //check if indicator is id valid
+        const exists = await Indicator.getIndicatorById(req.params.id);
+        if (exists.length === 0) {
             return res.status(400).json({
                 errors: [{
-                    msg: 'Invalid Academic Year Id',
+                    msg: 'Invalid Indicator Id',
                     result: exists,
-                    resultCount: exists.length
+                    resultCount: 0
                 }]
             });
         }
-        const results = await Academic.updateAcademicYearStatus(data);
+        const results = await Indicator.updateIndicatorStatus(data);
         if (results) {
             return res.status(200).json({
-                msg: 'New Academic Year Deleted',
+                msg: 'New Indicator Deleted',
                 result: [],
                 resultCount: 0
             });
