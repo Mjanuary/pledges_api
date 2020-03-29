@@ -1,23 +1,40 @@
 const express = require('express');
-const router = express.Router();
-const pool = require('../../config/db');
+const {
+    v4: uuidv4
+} = require('uuid');
+const {
+    check,
+    validationResult
+} = require('express-validator');
+
 const auth = require('../../middleware/auth');
-const { v4: uuidv4 } = require('uuid');
-// importing express-validator
-const { check, validationResult } = require('express-validator');
+const Pillar = require('../../models/pillars');
+
+const router = express.Router();
 
 // @route   GET pillars/
 // @desc    List all pillars
 // @access  Public
 router.get('/', async (req, res) => {
     try {
-    
-        let results = await pool.query('SELECT * FROM pillars  WHERE status = true')
-        res.status(200).json(results.rows)
-    
+
+        let results = await Pillar.getAllPillars();
+        if (results) {
+            return res.status(200).json({
+                msg: 'Get All Pillars',
+                result: results,
+                resultCount: results.length
+            });
+        }
+
     } catch (error) {
-      console.log(error.message);
-      res.status(500).send({ error:'Server Error'});
+        return res.status(500).json({
+            errors: [{
+                msg: 'server error',
+                errormsg: error.message,
+                error: error
+            }]
+        });
     }
 });
 
@@ -25,35 +42,47 @@ router.get('/', async (req, res) => {
 // // @route   POST pillars/
 // // @desc    Insert a pillar
 // // @access  Private
-router.post('/', [ auth, [
+router.post('/', [auth, [
     check('title', 'pillar id is required')
-      .not()
-      .isEmpty(),
+    .not()
+    .isEmpty(),
 ]], async (req, res) => {
-try {
     const errors = validationResult(req);
     // check is there is errors & return them
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+        return res.status(400).json({
+            errors: errors.array()
+        });
     }
-
-    const { title , description } = req.body
-    const id = uuidv4();
-
-    let results = await pool.query('INSERT INTO pillars (pillar_id, pillar_title, description) VALUES ($1, $2, $3)', [id, title, description])
-    res.status(200).json({
-        results: results.rows,
-        data: {
-            pillar_id: id,
-            pillar_title: title,
+    const {
+        title,
+        description
+    } = req.body
+    try {
+        const data = {
+            id: uuidv4(),
+            title,
             description
         }
-    })
 
-} catch (error) {
-  console.log(error.message);
-  res.status(500).send({ error:'Server Error'});
-}
+        let results = await Pillar.createNewPillar(data);
+        if (results) {
+            return res.status(200).json({
+                msg: 'New Pillar Created',
+                result: [data],
+                resultCount: 1
+            });
+        }
+
+    } catch (error) {
+        return res.status(500).json({
+            errors: [{
+                msg: 'server error',
+                errormsg: error.message,
+                error: error
+            }]
+        });
+    }
 });
 
 
@@ -61,55 +90,66 @@ try {
 // @route   PUT pillars/:pillar_id
 // @desc    Update pillar
 // @access  Private
-router.put('/:pillar_id', [ auth, [
+router.put('/:pillar_id', [auth, [
     check('pillar_id', 'pillar_id is required')
-        .not()
-        .isEmpty(),
+    .not()
+    .isEmpty(),
     check('title', 'title is required')
-      .not()
-      .isEmpty(),
+    .not()
+    .isEmpty(),
     check('description', 'description is required')
-      .not()
-      .isEmpty(),
+    .not()
+    .isEmpty(),
 ]], async (req, res) => {
-try {
     const errors = validationResult(req);
     // check is there is errors & return them
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+        return res.status(400).json({
+            errors: errors.array()
+        });
     }
 
-    const { title , description } = req.body
+    const {
+        title,
+        description
+    } = req.body
     const pillar_id = req.params.pillar_id
+    try {
+        const data = {
+            id: pillar_id,
+            title,
+            description
+        }
 
-    // cehck if the pillar exists
-    const exists = await pool.query('SELECT pillar_id FROM pillars WHERE pillar_id = $1 AND status = true', [pillar_id]);
-    console.log(exists.rows.length);
-    
-    if (exists.rows.length > 0) {
+        // cehck if the pillar exists
+        const exists = await Pillar.getPillarById(pillar_id);
+        if (!exists) {
+            return res.status(400).json({
+                errors: [{
+                    msg: 'Invalid Pillar Id',
+                    result: exists,
+                    resultCount: exists.length
+                }]
+            });
+        }
         // update
-        let results = await pool.query('UPDATE pillars SET pillar_title = $1, description = $2 WHERE pillar_id = $3', [title, description, pillar_id])
-        res.status(200).json({
-            msg: "Pillar updated",
-            data: {
-                pillar_id: pillar_id,
-                pillar_title: title,
-                description
-            }
-        })
-        
-    } else {
-
-        res.status(500).json({
-            msg: "invalid pillar id"
-        })
+        let results = await Pillar.updatePillarById(data);
+        if (results) {
+            return res.status(200).json({
+                msg: 'Pillar Updated',
+                result: [data],
+                resultCount: 1
+            });
+        }
+    } catch (error) {
+        return res.status(500).json({
+            errors: [{
+                msg: 'server error',
+                errormsg: error.message,
+                error: error
+            }]
+        });
     }
-
-
-} catch (error) {
-  console.log(error.message);
-  res.status(500).send({ error:'Server Error'});
-}
 });
 
 
@@ -118,42 +158,52 @@ try {
 // @route   DELETE pillars/:pillar_id
 // @desc    Update pillar
 // @access  Private
-router.delete('/:pillar_id', [ auth, [
+router.delete('/:pillar_id', [auth, [
     check('pillar_id', 'pillar_id is required')
-        .not()
-        .isEmpty()
+    .not()
+    .isEmpty()
 ]], async (req, res) => {
-try {
     const errors = validationResult(req);
     // check is there is errors & return them
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+        return res.status(400).json({
+            errors: errors.array()
+        });
     }
     const pillar_id = req.params.pillar_id
-
-    // cehck if the pillar exists
-    const exists = await pool.query('SELECT pillar_id FROM pillars WHERE pillar_id = $1 AND status = true', [pillar_id]);
-    console.log(exists.rows.length);
-    
-    if (exists.rows.length > 0) {
+    try {
+        // cehck if the pillar exists
+        const exists = await Pillar.getPillarById(pillar_id);
+        if (!exists) {
+            return res.status(400).json({
+                errors: [{
+                    msg: 'Invalid Pillar Id',
+                    result: exists,
+                    resultCount: exists.length
+                }]
+            });
+        }
         // update
-        let results = await pool.query('UPDATE pillars SET status = false WHERE pillar_id = $1', [pillar_id])
-        res.status(200).json({
-            msg: "Pillar deleted"
+        let results = await Pillar.updatePillaStatus({
+            id: pillar_id,
+            status: false
         })
-        
-    } else {
-
-        res.status(500).json({
-            msg: "invalid pillar id"
-        })
+        if (results) {
+            return res.status(200).json({
+                msg: 'Pillar Deleted',
+                result: {},
+                resultCount: results.length
+            });
+        }
+    } catch (error) {
+        return res.status(500).json({
+            errors: [{
+                msg: 'server error',
+                errormsg: error.message,
+                error: error
+            }]
+        });
     }
-
-
-} catch (error) {
-  console.log(error.message);
-  res.status(500).send({ error:'Server Error'});
-}
 });
 
 
