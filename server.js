@@ -19,6 +19,7 @@ app.use(bodyParser.json());
 app.use('/districts', require('./routes/api/Districts'));
 app.use('/pillars', require('./routes/api/Pillars'));
 app.use('/users', require('./routes/api/Users'));
+app.use('/academic', require('./routes/api/Accademic_year'));
 
 
 

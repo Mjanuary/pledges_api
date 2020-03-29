@@ -209,7 +209,8 @@ router.put('/:id', auth, upload.single('profile'), [
             return res.status(400).json({
                 errors: [{
                     msg: 'Invalid User Id',
-                    result: user
+                    result: user,
+                    resultCount: user.length
                 }]
             });
         }
