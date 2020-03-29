@@ -283,7 +283,7 @@ router.put('/:id/password', auth, [
         if (!isMatch) {
             return res.status(400).json({
                 errors: [{
-                    msg: 'Password 2 do not Match!',
+                    msg: 'Current Password is Invalid',
                 }]
             });
         }
