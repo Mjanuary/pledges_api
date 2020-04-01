@@ -19,9 +19,13 @@ path: `config/default.json`
 <hr>
 
 `"user": "postgres"`
+
 `"host": "localhost"`
+
 `"database": "imihigo_db"`
+
 `"password": "test@123"`
+
 `"port": 5432`
 
 # other some changes you have to make
