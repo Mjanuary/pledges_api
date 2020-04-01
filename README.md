@@ -10,7 +10,7 @@ to start in development server
 
 this ☝🏿 command will start nodemon
 
-********\_******** about database make sure you imported database in postgres dbms ****\_\_\_****
+**\*\*\*\***\_**\*\*\*\*** about database make sure you imported database in postgres dbms \***\*\_\_\_\*\***
 
 you have to make same hanges about in config folder
 
@@ -28,9 +28,9 @@ change this lines 👇🏾 according to your postgres database
 
 \*\*\*/
 
-**********\_\_\_********** about files some changes you have to make ********\_\_********
+****\*\*****\_\_\_****\*\***** about files some changes you have to make **\*\*\*\***\_\_**\*\*\*\***
 
 ⭐ make sure before you register user you network otherwise you will get error ➡ "email not send" but user will be
 registered
 
-⭐ in user router line 93 you have to change to your email ohterwise you don't get an email of registered user or get an error "email not send"
+⭐ in user router line 111 you have to change to your email ohterwise you don't get an email of registered user or get an error "email not send"
