@@ -11,7 +11,7 @@ module.exports = {
                 if (err) {
                     reject(err.stack)
                 } else {
-                    resolve(res.rows[0])
+                    resolve(res.rows)
                 }
             })
         })
@@ -27,7 +27,7 @@ module.exports = {
                 if (err) {
                     reject(err.stack)
                 } else {
-                    resolve(res.rows[0])
+                    resolve(res.rows)
                 }
             })
         })

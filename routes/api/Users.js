@@ -67,7 +67,7 @@ router.post(
 
         try {
             let user = await User.getUserByEmail(email);
-            if (user) {
+            if (user.length > 0) {
                 return res.status(400).json({
                     errors: [{
                         msg: 'User already exists',
@@ -130,7 +130,7 @@ router.get('/:id', [auth, [
 ]], async (req, res) => {
     try {
         const user = await User.getUserById(req.params.id);
-        if (user) {
+        if (user.length > 0) {
             return res.status(200).json({
                 msg: 'Get User by Id',
                 result: user,
@@ -205,7 +205,7 @@ router.put('/:id', auth, upload.single('profile'), [
     const profile = req.file.path;
     try {
         let user = await User.getUserById(req.params.id);
-        if (!user) {
+        if (user.length === 0) {
             return res.status(400).json({
                 errors: [{
                     msg: 'Invalid User Id',
@@ -272,7 +272,7 @@ router.put('/:id/password', auth, [
     }
     try {
         const user = await User.getUserById(req.params.id);
-        if (!user) {
+        if (user.length === 0) {
             return res.status(400).json({
                 errors: [{
                     msg: 'Invalid User Id',
@@ -280,7 +280,7 @@ router.put('/:id/password', auth, [
             });
         };
 
-        const isMatch = await bcrypt.compare(current_password, user.password);
+        const isMatch = await bcrypt.compare(current_password, user[0].password);
         if (!isMatch) {
             return res.status(400).json({
                 errors: [{

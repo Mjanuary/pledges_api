@@ -122,8 +122,8 @@ router.put('/:id', [auth, [
             return res.status(400).json({
                 errors: [{
                     msg: 'Invalid Academic Year Id',
-                    result: exists,
-                    resultCount: exists.length
+                    result: [],
+                    resultCount: 0
                 }]
             });
         }

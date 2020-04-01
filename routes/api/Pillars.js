@@ -123,7 +123,7 @@ router.put('/:pillar_id', [auth, [
 
         // cehck if the pillar exists
         const exists = await Pillar.getPillarById(pillar_id);
-        if (!exists) {
+        if (exists.length === 0) {
             return res.status(400).json({
                 errors: [{
                     msg: 'Invalid Pillar Id',
@@ -174,7 +174,7 @@ router.delete('/:pillar_id', [auth, [
     try {
         // cehck if the pillar exists
         const exists = await Pillar.getPillarById(pillar_id);
-        if (!exists) {
+        if (exists.length === 0) {
             return res.status(400).json({
                 errors: [{
                     msg: 'Invalid Pillar Id',
