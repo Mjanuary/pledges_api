@@ -22,6 +22,7 @@ app.use('/users', require('./routes/api/Users'));
 app.use('/academic', require('./routes/api/Accademic_year'));
 app.use('/indicator', require('./routes/api/Indicator'));
 app.use('/province', require('./routes/api/Province'));
+app.use('/district', require('./routes/api/Districts'));
 
 
 
