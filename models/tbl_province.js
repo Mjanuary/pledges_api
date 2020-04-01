@@ -83,7 +83,7 @@ module.exports = {
     },
     getProvinceDistrict(id) {
         const query = {
-            text: 'SELECT d.district_id, d.district_name, d.geo_location FROM tbl_province p INNER JOIN tbl_district d ON p.province_id = d.province_id WHERE p.province_id=$1 and p.system_access=$2',
+            text: 'SELECT d.district_id, d.district_name, d.geo_location FROM tbl_province p INNER JOIN tbl_district d ON p.province_id = d.province_id WHERE p.province_id=$1 and d.system_access=$2',
             values: [id, true]
         }
         return new Promise((resolve, reject) => {

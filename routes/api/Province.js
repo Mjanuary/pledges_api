@@ -65,6 +65,39 @@ router.post(
   }
 );
 
+// @route   GET province/:id
+// @desc    get province details
+// @access  Private
+router.get('/:id', auth, async (req, res) => {
+  const id = req.params.id
+  try {
+    const results = await Province.getProvinceById(id);
+    if (results.length > 0) {
+      return res.status(200).json({
+        msg: 'Get Province Details',
+        result: results,
+        resultCount: results.length
+      });
+    } else {
+      return res.status(400).json({
+        errors: [{
+          msg: 'Invalid Province Id',
+          result: [],
+          resultCount: 0
+        }]
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      errors: [{
+        msg: 'server error',
+        errormsg: error.message,
+        error: error
+      }]
+    });
+  }
+});
+
 // @route   GET province/
 // @desc    get all province
 // @access  Private
@@ -93,6 +126,7 @@ router.get('/', auth, async (req, res) => {
 // @desc    Get all Province District
 // @access  Private
 router.get('/:id/district', auth, async (req, res) => {
+  const id = req.params.id
   try {
     const check = await Province.getProvinceById(id);
     if (check.length === 0) {
@@ -104,10 +138,10 @@ router.get('/:id/district', auth, async (req, res) => {
         }]
       });
     }
-    const results = await Province.getAllProvinces();
+    const results = await Province.getProvinceDistrict(id);
     if (results) {
       return res.status(200).json({
-        msg: 'Get all Province',
+        msg: 'Get all District in Province',
         result: results,
         resultCount: results.length
       });
