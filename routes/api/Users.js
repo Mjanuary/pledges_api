@@ -13,6 +13,8 @@ const {
 const auth = require('../../middleware/auth');
 const User = require('../../models/users');
 
+//functions for uploading image 
+// setting where file will be uploaded and renaming file
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, 'uploads/plofile_img/')
@@ -24,7 +26,23 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage: storage
 });
+
+//function for creating round number and string for password
+const randomStringNumber = () => {
+    var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
+    var string_length = 8;
+    var randomstring = '';
+    for (var i = 0; i < string_length; i++) {
+        var rnum = Math.floor(Math.random() * chars.length);
+        randomstring += chars.substring(rnum, rnum + 1);
+    }
+    return randomstring;
+}
+
+//setting router
 const router = express.Router();
+
+//setting config for an emailsender
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -64,7 +82,7 @@ router.post(
             email,
             phone_number
         } = req.body;
-
+        const password = randomStringNumber();
         try {
             let user = await User.getUserByEmail(email);
             if (user.length > 0) {
@@ -81,7 +99,7 @@ router.post(
                 email,
                 phone_number,
                 nid: uuid.v4(),
-                password: '123456'
+                password: password
             };
             const salt = await bcrypt.genSalt(10);
             user.password = await bcrypt.hash(user.password, salt);
@@ -90,9 +108,9 @@ router.post(
             if (results) {
                 const mailOptions = {
                     from: 'imihigoms@gmail.com',
-                    to: 'ij.gabin123@gmail.com',
+                    to: 'ij.gabin123@gmail.com', //change this to your email
                     subject: 'Pledges MS Sign up Succesfully ',
-                    text: `You have succesfully sign up to Pledges MS your password is 123456 and username is ${email}`
+                    text: `You have succesfully sign up to Pledges MS your password is ${password} and username is ${email}`
                 };
                 transporter.sendMail(mailOptions, (error, info) => {
                     if (error) {
