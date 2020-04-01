@@ -39,7 +39,7 @@ module.exports = {
     }) {
         const query = {
             text: 'UPDATE tbl_district SET district_name=$1, geo_location=$2 WHERE district_id=$3',
-            values: [data.province_name, data.geo_location, data.id]
+            values: [data.district_name, data.geo_location, data.id]
         }
         return new Promise((resolve, reject) => {
             pool.query(query, (err, res) => {

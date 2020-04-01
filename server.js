@@ -23,6 +23,8 @@ app.use('/academic', require('./routes/api/Accademic_year'));
 app.use('/indicator', require('./routes/api/Indicator'));
 app.use('/province', require('./routes/api/Province'));
 app.use('/district', require('./routes/api/Districts'));
+app.use('/sectors', require('./routes/api/Sectors'));
+app.use('/cell', require('./routes/api/Cells'));
 
 
 
@@ -32,5 +34,5 @@ app.get('/', (req, res) => res.send('API Running'));
 
 
 app.listen(PORT, () => {
-    console.log(`🖥️ Server started 🚀  on port ${PORT}`);
+    console.log(`🖥️  Server started 🚀 on port ${PORT}`);
 });
